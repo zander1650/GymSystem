@@ -1,3 +1,3 @@
-Our gym Management program aims to help gyms have a modernized app the allows them to store a large amount of gym member and view all members
-data in a clean and effient list, will abilities to remove members or hired staff  (trainers) as needed. This project uses databases consistanly though and takes multiple tables.
-Created by Zander Fiels and David (Thai) Nguyen
+Our Gym Management Program is designed to help gyms modernize their operations with a user-friendly app that efficiently stores and manages large amounts of member data. The app displays all member information in a clean and organized list, with built-in functionality to remove members or staff (such as trainers) as needed. The project relies heavily on databases and incorporates multiple interconnected tables for effective data handling.
+
+Created by Zander Fiels and David (Thai) Nguyen.
