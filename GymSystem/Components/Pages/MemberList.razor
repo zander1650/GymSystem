@@ -1,0 +1,210 @@
+﻿@page "/View Members"
+@inject NavigationManager Navigation
+
+<style>
+    .client-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .client-header {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        font-size: 2rem;
+    }
+
+    .client-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .client-table thead {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .client-table th,
+        .client-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .client-table td {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .client-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .client-table tbody tr:hover {
+            background-color: #e9f7fe;
+            transition: background-color 0.2s ease;
+        }
+
+    .delete-button {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+
+    .membership-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: white;
+        text-align: center;
+    }
+
+    .standard {
+        background-color: #6c757d;
+    }
+
+    .premium {
+        background-color: #0d6efd;
+    }
+
+    .vip {
+        background-color: #d63384;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #7f8c8d;
+        font-style: italic;
+    }
+</style>
+
+<div class="client-container">
+    <h2 class="client-header">Registered Members</h2>
+
+    @if (clients.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No Members have been added yet.</p>
+        </div>
+    }
+    else
+    {
+        <table class="client-table">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Membership</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var client in clients)
+                {
+                    <tr>
+                        <td>@client.FirstName</td>
+                        <td>@client.LastName</td>
+                        <td>@client.Email</td>
+                        <td>@client.PhoneNumber</td>
+                        <td>
+                            <span class="membership-badge @client.MembershipType.ToLower()">@client.MembershipType</span>
+                        </td>
+                        <td>
+                            <button class="delete-button" @onclick="() => DeleteClient(client.ClientId)">BAN!!</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Client> clients = new();
+    private string connectionString = "Server=localhost; Database=gymTables; User=root; Password=123;";
+
+    public class Client
+    {
+        public int ClientId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string MembershipType { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClients();
+    }
+
+    private async Task LoadClients()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT clientid, firstname, lastname, email, phonenumber, membershiptype FROM clientinfo";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            clients.Clear();
+            while (await reader.ReadAsync())
+            {
+                clients.Add(new Client
+                    {
+                        ClientId = reader.GetInt32(reader.GetOrdinal("clientid")),
+                        FirstName = reader.GetString(reader.GetOrdinal("firstname")),
+                        LastName = reader.GetString(reader.GetOrdinal("lastname")),
+                        Email = reader.GetString(reader.GetOrdinal("email")),
+                        PhoneNumber = reader.GetString(reader.GetOrdinal("phonenumber")),
+                        MembershipType = reader.GetString(reader.GetOrdinal("membershiptype"))
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteClient(int clientId)
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "DELETE FROM clientinfo WHERE clientid = @ClientId";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@ClientId", clientId);
+
+            await command.ExecuteNonQueryAsync();
+            await LoadClients();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting client: {ex.Message}");
+        }
+    }
+}

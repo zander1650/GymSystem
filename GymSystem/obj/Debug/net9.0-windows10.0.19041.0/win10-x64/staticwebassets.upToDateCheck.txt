@@ -1,0 +1,8 @@
+C:\Users\zande\source\repos\GymSystem\GymSystem\wwwroot\css\bootstrap\bootstrap.min.css.map
+C:\Users\zande\source\repos\GymSystem\GymSystem\wwwroot\css\app.css
+C:\Users\zande\source\repos\GymSystem\GymSystem\wwwroot\css\bootstrap\bootstrap.min.css
+C:\Users\zande\source\repos\GymSystem\GymSystem\wwwroot\index.html
+wwwroot\css\app.css
+wwwroot\css\bootstrap\bootstrap.min.css
+wwwroot\css\bootstrap\bootstrap.min.css.map
+wwwroot\index.html

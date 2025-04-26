@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\zande\\source\\repos\\GymSystem\\GymSystem\\obj\\Debug\\net9.0-android\\scopedcss\\bundle\\GymSystem.styles.css",
+      "PackagePath": "staticwebassets\\GymSystem.styles.css"
+    },
+    {
+      "Id": "C:\\Users\\zande\\source\\repos\\GymSystem\\GymSystem\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\zande\\source\\repos\\GymSystem\\GymSystem\\wwwroot\\css\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\zande\\source\\repos\\GymSystem\\GymSystem\\wwwroot\\css\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\zande\\source\\repos\\GymSystem\\GymSystem\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-android\\staticwebassets\\msbuild.GymSystem.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-android\\staticwebassets\\msbuild.GymSystem.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-android\\staticwebassets\\msbuild.build.GymSystem.props",
+      "PackagePath": "build\\GymSystem.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-android\\staticwebassets\\msbuild.buildMultiTargeting.GymSystem.props",
+      "PackagePath": "buildMultiTargeting\\GymSystem.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-android\\staticwebassets\\msbuild.buildTransitive.GymSystem.props",
+      "PackagePath": "buildTransitive\\GymSystem.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

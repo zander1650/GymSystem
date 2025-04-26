@@ -1,0 +1,161 @@
+﻿@page "/Check In Member"
+
+<h2 class="title">Gym Check-In</h2>
+
+<button class="checkin-button" @onclick="ShowClientList">Check In</button>
+
+@if (showClientList)
+{
+        <div class="client-list">
+            <h3>Select a Client to Check In</h3>
+            <ul>
+            @foreach (var client in clients)
+            {
+                        <li @onclick="() => CheckInClient(client)">
+                    @client.FirstName @client.LastName
+                        </li>
+            }
+            </ul>
+            <button class="close-button" @onclick="() => showClientList = false">Cancel</button>
+        </div>
+}
+
+@if (!string.IsNullOrEmpty(confirmationMessage))
+{
+        <div class="confirmation">@confirmationMessage</div>
+}
+
+<style>
+    .title {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 32px;
+        color: #2c3e50;
+    }
+
+    .checkin-button {
+        display: block;
+        margin: 30px auto;
+        padding: 12px 24px;
+        font-size: 1rem;
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .checkin-button:hover {
+        background-color: #1e8449;
+    }
+
+    .client-list {
+        max-width: 400px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .client-list h3 {
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .client-list ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .client-list li {
+        padding: 10px;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .client-list li:hover {
+        background-color: #e0e0e0;
+    }
+
+    .close-button {
+        display: block;
+        margin: 10px auto 0;
+        padding: 8px 16px;
+        background-color: #ccc;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .confirmation {
+        text-align: center;
+        background: #d1e7dd;
+        color: #0f5132;
+        padding: 15px;
+        margin: 20px auto;
+        max-width: 600px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    private List<Client> clients = new();
+    private bool showClientList = false;
+    private string confirmationMessage;
+
+    private string connectionString = "Server=localhost; Database=gymTables; User=root; Password=123;";
+
+    public class Client
+    {
+        public int ClientId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+
+    private async Task ShowClientList()
+    {
+        confirmationMessage = string.Empty;
+        await LoadClients();
+        showClientList = true;
+    }
+
+    private async Task LoadClients()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT clientid, firstname, lastname FROM clientinfo";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            clients.Clear();
+            while (await reader.ReadAsync())
+            {
+                clients.Add(new Client
+                    {
+                        ClientId = reader.GetInt32(reader.GetOrdinal("clientid")),
+                        FirstName = reader.GetString(reader.GetOrdinal("firstname")),
+                        LastName = reader.GetString(reader.GetOrdinal("lastname"))
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+    }
+
+    private void CheckInClient(Client client)
+    {
+        confirmationMessage = $"{client.FirstName} {client.LastName} checked in successfully. Client may enter the gym.";
+        showClientList = false;
+    }
+}

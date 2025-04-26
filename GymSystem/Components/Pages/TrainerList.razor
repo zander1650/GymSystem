@@ -1,0 +1,192 @@
+﻿@page "/View Trainers"
+@inject NavigationManager Navigation
+
+<style>
+    .client-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .client-header {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-weight: 600;
+        font-size: 2rem;
+    }
+
+    .client-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .client-table thead {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .client-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .client-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .client-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .client-table tbody tr:hover {
+            background-color: #e9f7fe;
+            transition: background-color 0.2s ease;
+        }
+
+    .delete-button {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        color: #7f8c8d;
+        font-style: italic;
+    }
+</style>
+
+<div class="client-container">
+    <h2 class="client-header">Hired Trainers</h2>
+
+    @if (trainers.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No trainers have been hired yet.</p>
+        </div>
+    }
+    else
+    {
+        <table class="client-table">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Taught Class</th>
+                    <th>Hire Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trainer in trainers)
+                {
+                    <tr>
+                        <td>@trainer.FirstName</td>
+                        <td>@trainer.LastName</td>
+                        <td>@trainer.Email</td>
+                        <td>@trainer.PhoneNumber</td>
+                        <td>@trainer.TaughtClass</td>
+                        <td>@(trainer.HireDate == DateTime.MinValue ? "N/A" : trainer.HireDate.ToString("yyyy-MM-dd HH:mm"))</td>
+                        <td>
+                            <button class="delete-button" @onclick="() => DeleteTrainer(trainer.TrainerId)">Fire</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Trainer> trainers = new();
+    private string connectionString = "Server=localhost; Database=gymTables; User=root; Password=123;";
+
+    public class Trainer
+    {
+        public int TrainerId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string TaughtClass { get; set; }
+        public DateTime HireDate { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTrainers();
+    }
+
+    private async Task LoadTrainers()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT trainerid, firstname, lastname, email, phonenumber, hiredate, taughtclass FROM trainerinfo";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            trainers.Clear();
+            while (await reader.ReadAsync())
+            {
+                trainers.Add(new Trainer
+                    {
+                        TrainerId = reader.GetInt32(reader.GetOrdinal("trainerid")),
+                        FirstName = reader.IsDBNull(reader.GetOrdinal("firstname")) ? "N/A" : reader.GetString(reader.GetOrdinal("firstname")),
+                        LastName = reader.IsDBNull(reader.GetOrdinal("lastname")) ? "N/A" : reader.GetString(reader.GetOrdinal("lastname")),
+                        Email = reader.IsDBNull(reader.GetOrdinal("email")) ? "N/A" : reader.GetString(reader.GetOrdinal("email")),
+                        PhoneNumber = reader.IsDBNull(reader.GetOrdinal("phonenumber")) ? "N/A" : reader.GetString(reader.GetOrdinal("phonenumber")),
+                        TaughtClass = reader.IsDBNull(reader.GetOrdinal("taughtclass")) ? "N/A" : reader.GetString(reader.GetOrdinal("taughtclass")),
+                        HireDate = reader.IsDBNull(reader.GetOrdinal("hiredate")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("hiredate"))
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading trainers: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteTrainer(int trainerId)
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "DELETE FROM trainerinfo WHERE trainerid = @TrainerId";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@TrainerId", trainerId);
+
+            await command.ExecuteNonQueryAsync();
+
+            await LoadTrainers();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting trainer: {ex.Message}");
+        }
+    }
+}

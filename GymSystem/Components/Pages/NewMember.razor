@@ -1,0 +1,198 @@
+﻿@page "/Add Member"
+@inject NavigationManager Navigation
+
+<h1 class="title">Add New Member</h1>
+
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="success-message">@SuccessMessage</div>
+}
+
+<div class="card">
+    <div class="form-group">
+        <input type="text" placeholder="Enter Client First Name" @bind="FirstName" />
+    </div>
+    <div class="form-group">
+        <input type="text" placeholder="Enter Client Last Name" @bind="LastName" />
+    </div>
+    <div class="form-group">
+        <input type="text" placeholder="Enter Client Email" @bind="Email" />
+    </div>
+    <div class="form-group">
+        <input type="text" placeholder="Enter Client Phone Number" @bind="PhoneNumber" />
+    </div>
+
+    <!-- Membership Type Selection -->
+    <div class="form-group">
+        <label class="membership-label">Select Membership Type</label>
+        <div class="membership-options">
+            <button type="button" class="membership-button standard @(MembershipType == "Standard" ? "selected" : "")" @onclick="@(() => SetMembershipType("Standard"))">Standard</button>
+            <button type="button" class="membership-button premium @(MembershipType == "Premium" ? "selected" : "")" @onclick="@(() => SetMembershipType("Premium"))">Premium</button>
+            <button type="button" class="membership-button vip @(MembershipType == "VIP" ? "selected" : "")" @onclick="@(() => SetMembershipType("VIP"))">VIP</button>
+        </div>
+    </div>
+
+    <button class="submit-button" @onclick="AddClient">Submit</button>
+</div>
+
+<style>
+    body {
+        background-color: #f0fff0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .title {
+        text-align: center;
+        color: #2d6a4f;
+        margin-top: 30px;
+        font-size: 36px;
+    }
+
+    .card {
+        max-width: 700px;
+        margin: 40px auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 16px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 12px;
+        background-color: #2d6a4f;
+        color: white;
+        font-size: 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+        .submit-button:hover {
+            background-color: turquoise;
+        }
+
+    .success-message {
+        max-width: 700px;
+        margin: 0 auto 20px;
+        padding: 15px;
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 500;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .membership-label {
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: block;
+        color: #2d6a4f;
+    }
+
+    .membership-options {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+    }
+
+    .membership-button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+        .membership-button.standard {
+            background-color: #6c757d;
+        }
+
+        .membership-button.premium {
+            background-color: #0d6efd;
+        }
+
+        .membership-button.vip {
+            background-color: #d63384;
+        }
+
+        .membership-button.selected {
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+</style>
+
+@code {
+    private string FirstName { get; set; }
+    private string LastName { get; set; }
+    private string Email { get; set; }
+    private string PhoneNumber { get; set; }
+    private string MembershipType { get; set; }
+    private string SuccessMessage { get; set; }
+
+    private string connectionString = "Server=localhost; Database=gymTables; User=root; Password=123;";
+
+    private async Task AddClient()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            Random random = new Random();
+            int clientId = random.Next(1000, 99999);
+
+            var query = "INSERT INTO clientinfo (clientid, firstname, lastname, email, phonenumber, membershiptype) " +
+                        "VALUES (@ClientId, @FirstName, @LastName, @Email, @PhoneNumber, @MembershipType)";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@ClientId", clientId);
+            command.Parameters.AddWithValue("@FirstName", FirstName);
+            command.Parameters.AddWithValue("@LastName", LastName);
+            command.Parameters.AddWithValue("@Email", Email);
+            command.Parameters.AddWithValue("@PhoneNumber", PhoneNumber);
+            command.Parameters.AddWithValue("@MembershipType", MembershipType);
+
+            await command.ExecuteNonQueryAsync();
+
+            SuccessMessage = "Member successfully added!";
+            ClearForm();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void ClearForm()
+    {
+        FirstName = string.Empty;
+        LastName = string.Empty;
+        Email = string.Empty;
+        PhoneNumber = string.Empty;
+        MembershipType = string.Empty;
+    }
+
+    private void SetMembershipType(string type)
+    {
+        MembershipType = type;
+    }
+}

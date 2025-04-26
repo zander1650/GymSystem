@@ -1,0 +1,255 @@
+﻿@page "/Register For Class"
+
+<h2 class="title">Register For a Class</h2>
+
+@if (trainers.Count == 0)
+{
+    <p class="empty">No trainers available.</p>
+}
+else
+{
+    <div class="trainer-list">
+        @foreach (var trainer in trainers)
+        {
+            <div class="trainer-card">
+                <h4>@trainer.FirstName @trainer.LastName</h4>
+                <p><strong>Class:</strong> @trainer.TaughtClass</p>
+                <button class="book-button" @onclick="() => ShowClientPopup(trainer)">Book Class</button>
+            </div>
+        }
+    </div>
+}
+
+@if (showPopup)
+{
+    <div class="popup-overlay">
+        <div class="popup">
+            <h3>Select a Client</h3>
+            <ul class="client-list">
+                @foreach (var client in clients)
+                {
+                    <li @onclick="() => BookClientWithTrainer(client, selectedTrainer)">
+                        @client.FirstName @client.LastName
+                    </li>
+                }
+            </ul>
+            <button class="close-button" @onclick="() => showPopup = false">Close</button>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(confirmationMessage))
+{
+    <div class="confirmation">@confirmationMessage</div>
+}
+
+<style>
+    .title {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 32px;
+        color: #2c3e50;
+    }
+
+    .empty {
+        text-align: center;
+        margin-top: 30px;
+        font-style: italic;
+        color: #888;
+    }
+
+    .trainer-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .trainer-card {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .book-button {
+        margin-top: 10px;
+        padding: 10px 16px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .book-button:hover {
+            background-color: #2980b9;
+        }
+
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .popup {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+
+    .client-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+    }
+
+        .client-list li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+            .client-list li:hover {
+                background-color: #f0f0f0;
+            }
+
+    .close-button {
+        margin-top: 20px;
+        background: #ccc;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .confirmation {
+        text-align: center;
+        background: #d1e7dd;
+        color: #0f5132;
+        padding: 15px;
+        margin: 20px auto;
+        max-width: 600px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    private List<Trainer> trainers = new();
+    private List<Client> clients = new();
+
+    private string connectionString = "Server=localhost; Database=gymTables; User=root; Password=123;";
+
+    private bool showPopup = false;
+    private Trainer selectedTrainer;
+    private string confirmationMessage;
+
+    public class Trainer
+    {
+        public int TrainerId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string TaughtClass { get; set; }
+    }
+
+    public class Client
+    {
+        public int ClientId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTrainers();
+        await LoadClients();
+    }
+
+    private async Task LoadTrainers()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT trainerid, firstname, lastname, taughtclass FROM trainerinfo";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            trainers.Clear();
+            while (await reader.ReadAsync())
+            {
+                trainers.Add(new Trainer
+                    {
+                        TrainerId = reader.GetInt32(reader.GetOrdinal("trainerid")),
+                        FirstName = reader.GetString(reader.GetOrdinal("firstname")),
+                        LastName = reader.GetString(reader.GetOrdinal("lastname")),
+                        TaughtClass = reader.GetString(reader.GetOrdinal("taughtclass"))
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading trainers: {ex.Message}");
+        }
+    }
+
+    private async Task LoadClients()
+    {
+        try
+        {
+            using var connection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT clientid, firstname, lastname FROM clientinfo";
+            using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            clients.Clear();
+            while (await reader.ReadAsync())
+            {
+                clients.Add(new Client
+                    {
+                        ClientId = reader.GetInt32(reader.GetOrdinal("clientid")),
+                        FirstName = reader.GetString(reader.GetOrdinal("firstname")),
+                        LastName = reader.GetString(reader.GetOrdinal("lastname"))
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading clients: {ex.Message}");
+        }
+    }
+
+    private void ShowClientPopup(Trainer trainer)
+    {
+        selectedTrainer = trainer;
+        showPopup = true;
+        confirmationMessage = string.Empty;
+    }
+
+    private void BookClientWithTrainer(Client client, Trainer trainer)
+    {
+        confirmationMessage = $"{client.FirstName} {client.LastName} booked with Trainer {trainer.FirstName} {trainer.LastName}";
+        showPopup = false;
+    }
+}
